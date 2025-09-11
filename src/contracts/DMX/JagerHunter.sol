@@ -8,27 +8,27 @@ contract JagerHunter is JagerHunterBaseToken
      constructor()
         JagerHunterBaseToken(
             //SwapRouter
-            address(0x10ED43C718714eb63d5aA57B78B54704E256024E),
+            address(0x5b30fAE7bf5e68398fe9bC2Daac70A47d510EBea),
             // Name
-            unicode"JDMX",
+            unicode"DMX Token",
             // Symbol
             unicode"DMX",
             //Decimals
             18,
-            //  Supply
+            // Supply
             146_00_0000_0000_0000,
             // FundAddress
-            address(0xaf5FFa64b0421B4D1e400cad8f2E4B6BA6fbE5b9),
-             // airdropAddress
-            address(0x64981BFAc88b2CCFa7d9627387521161D2b89DB0),
+            address(0xa2FE19fFC2e1A49268cA31b47ccf94971BC4b54F),
+             // airdropAddress: Normal Address
+            address(0xEDfd2aa1a997DEf83585907b43f6461456e9d582),
              // cexAddress
-            address(0xc7950E38946393d0EAe08F3Ea67F69F54f632754),
+            address(0xfE7A8CEf4Df1b0433223F9D677294E30843f4688),
              // marketAddress
-            address(0xB69Af387475195107EDc435A6346f606428A9187),
-              // liquidityAddress
-            address(0x43567a33FC0D8c90C8f5FCfE5752906CbeC79E84),
-            // sign
-            address(0x6999b70785EcE5d4B885E9345202fb832a08D3E8)
+            address(0x1Fb03f8Ef651A79C7479a842DB648593cC9A5E86),
+              // liquidityAddress: Normal Address
+            address(0xd85D2e17190900df7AA7bce9A8a7E2D678D8b4E9),
+            // sign: Normal Address
+            address(0xe55B483bdD51F155f6Eb4C2151BC9FA6bE9Ff51A)
         )
     {}
 }

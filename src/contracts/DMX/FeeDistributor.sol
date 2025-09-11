@@ -2,10 +2,10 @@
 pragma solidity 0.8.21;
 
 import { TransferHelper } from "./TransferHelper.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20 } from "./token/ERC20/IERC20.sol";
 import { Ownable } from "./access/Ownable.sol";
-import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { Counters } from "./utils/Counters.sol";
+import { ECDSA } from "./utils/cryptography/ECDSA.sol";
 
 import { JagerBnb } from "./JagerBnb.sol";
 
