@@ -5,7 +5,7 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Using account:", deployer.address);
 
-  const ERC20Factory = await ethers.getContractFactory("MyERC20");
+  const ERC20Factory = await ethers.getContractFactory("StandardERC20");
   const StableCoin = await ethers.getContractFactory("MyStableCoin");
 
   // Presale Token DMX
@@ -24,7 +24,7 @@ async function main() {
   // const recipient = "0x531d81b69f90Bd78D4f55495F541183B4a02b15f"; // Mobile wallet: 0x35478eCd5d5523EbfF204F60F308E335F75fcC31, Desktop wallet: 0x531d81b69f90Bd78D4f55495F541183B4a02b15f
   // const amount = ethers.parseUnits("10000000", 6);
 
-  // const dmx = await ethers.getContractAt("MyERC20", dmxAddress, deployer);
+  // const dmx = await ethers.getContractAt("StandardERC20", dmxAddress, deployer);
   // const tx = await dmx.transfer(recipient, amount);
   // await tx.wait();
 
