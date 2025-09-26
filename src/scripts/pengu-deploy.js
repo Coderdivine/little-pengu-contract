@@ -5,10 +5,10 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Using account:", deployer.address);
 
-  const PenguFactory = await ethers.getContractFactory("PenguToken");
+  const PenguFactory = await ethers.getContractFactory("LILPENGU");
 
   // LITTLE PENGU Token
-  const pengu = await PenguFactory.deploy(100_000_000_000_000);
+  const pengu = await PenguFactory.deploy();
   await pengu.waitForDeployment();
   console.log("LITTLE PENGU deployed at:", pengu.target);
 }
