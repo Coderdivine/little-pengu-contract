@@ -1,5 +1,5 @@
 /**
- *Submitted for verification at scan-testnet.assetchain.org on 2025-09-26
+ *Submitted for verification at scan.assetchain.org on 2025-09-26
 */
 
 // ██╗     ██╗██╗     ██████╗ ███████╗███╗   ██╗ ██████╗ ██╗   ██╗
@@ -12,9 +12,9 @@
 //                                      
 // Name: Little Pengu
 // Token: LILPENGU
-// Website: https://littlepengu.com
-// Twitter/X: https://x.com/littlepengutoken
-// Telegram: https://t.me/littlepengutoken
+// Website: littlepengu.xyz
+// Twitter/X: https://x.com/littlepengua
+// Telegram: https://t.me/littlepengus
 // 
 
 
