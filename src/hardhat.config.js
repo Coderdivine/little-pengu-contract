@@ -1,5 +1,7 @@
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
+
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -50,6 +52,25 @@ module.exports = {
       gas: "auto",
       allowUnlimitedContractSize: true
     },
+    bsc: {
+      url: "https://bsc-dataseed.binance.org/",
+      accounts: [process.env.PRIVATE_KEY],
+      confirmations: 1,
+      gasPrice: "auto",
+      gas: "auto",
+      allowUnlimitedContractSize: true,
+      chainId: 56
+    },
+    ethereum: {
+      url: "https://rpc.ankr.com/eth",
+      chainId: 1,
+      accounts: [process.env.PRIVATE_KEY],
+      gas: "auto",
+      gasPrice: "auto",
+      confirmations: 1
+    },
+
+    // Testnet
     assetchainTestnet: {
       url: "https://enugu-rpc.assetchain.org",
       chainId: 42421,
@@ -80,6 +101,19 @@ module.exports = {
       gasPrice: "auto",
     },
   },
+  etherscan: {
+    apiKey: process.env.BSCSCAN_API_KEY,
+    customChains: [
+      {
+        network: "assetchain",
+        chainId: 42420,
+        urls: {
+          apiURL: "https://scan.assetchain.org/api",
+          browserURL: "https://scan.assetchain.org/"
+        }
+      }
+    ]
+  },
   gasReporter: {
     enabled: true,
     currency: "USD",
@@ -89,4 +123,8 @@ module.exports = {
     runOnCompile: true,
     disambiguatePaths: false,
   },
+  sourcify: {
+  enabled: true
+}
+
 };

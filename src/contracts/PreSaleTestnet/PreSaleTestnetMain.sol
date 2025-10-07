@@ -305,7 +305,7 @@ interface Aggregator {
         );
 }
 
-contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
+contract  LILPENGU_Presale_Testnet_Main is ReentrancyGuard, Ownable {
     uint256 public overalllRaised;
     uint256 public presaleId;
     uint256 public USDT_MULTIPLIER;
@@ -355,6 +355,7 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
     mapping(address => bool) public isExcludeMinToken;
     mapping(address => bool) public isBlackList;
     mapping(address => bool) public isExist;
+    mapping(address => bytes32) public solanaBindings;
 
 
     uint256 public MinTokenTobuy;
@@ -552,6 +553,7 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
         price = (price * (10**10));
         return uint256(price);
     }
+
 
     modifier checkPresaleId(uint256 _id) {
         require(_id > 0 && _id == currentSale, "Invalid presale id");
@@ -971,4 +973,15 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
         return block.timestamp;
     }
 
+    function bindSolana(bytes32 solanaAddress) external {
+        require(solanaBindings[msg.sender] == bytes32(0), "Already bound");
+        require(solanaAddress != bytes32(0), "Invalid address");
+        solanaBindings[msg.sender] = solanaAddress;
+    }
+
+    
+    function isSolanaBound(address ethAddress) public view returns (bool) {
+        return solanaBindings[ethAddress] != bytes32(0);
+    }
+    
 }

@@ -1,53 +1,48 @@
 const hre = require("hardhat");
-const { ethers } = hre;
+const { ethers, network } = hre;
+const chalk = require("chalk");
+const ora = require("ora");
+const { CONFIG } = require("../configs");
 
 
 async function main() {
-  const oracle = "0x9fd12A214AFC063158eFc1E96Ee07b93c385af2e";
-  const usdt = "0xa8fD6920B23f0a625914c8f12361E89930BeeD59";
-  const usdc = "0xa8fD6920B23f0a625914c8f12361E89930BeeD59";
-  const saleToken = "0x48065f4c6A22a1075851f1879699bF19367ee459";
-  const minTokenToBuy = 1;
+  const net = network.name;
+  console.log(chalk.blueBright.bold(`\n🌍 Deploying to network:`), chalk.yellow(net));
 
-  console.log("Deploying LILPEPE_Presale...");
+  const config = CONFIG[net];
+  if (!config) {
+    console.log(chalk.redBright(`\n❌ No configuration found for network: ${net}\n`));
+    process.exit(1);
+  }
 
-  const Presale = await ethers.getContractFactory("LILPEPE_Presale_Source");
-  const presale = await Presale.deploy(
-    oracle,
-    usdt,
-    usdc,
-    saleToken,
-    minTokenToBuy
-  );
+  console.log(chalk.cyan(`\n🔧 Using configuration:`));
+  console.table(config);
 
-  await presale.waitForDeployment();
-  const presaleAddress = await presale.getAddress();
-
-  console.log(`✅ LILPEPE_Presale deployed at: ${presaleAddress}`);
-
-  // ==== Call some view functions ====
-  const presaleId = await presale.presaleId();
-  console.log("Presale ID:", presaleId.toString());
-
-  const minBuy = await presale.MinTokenTobuy();
-  console.log("Minimum tokens to buy:", minBuy.toString());
-
-  const currentSale = await presale.currentSale();
-  console.log("Current Sale ID:", currentSale.toString());
-
-  const fundReceiver = await presale.fundReceiver();
-  console.log("Fund receiver:", fundReceiver);
-
+  const spinner = ora(chalk.green(`Deploying LILPENGU Presale Source...`)).start();
 
   try {
-    const price = await presale.getLatestPrice();
-    console.log("Oracle price:", price.toString());
-  } catch (err) {
-    console.log("⚠️ getLatestPrice failed - check oracle address");
+    const Presale = await ethers.getContractFactory("LILPENGU_Presale_Source");
+    const presale = await Presale.deploy(
+      config.oracle,
+      config.usdt,
+      config.usdc,
+      config.saleToken,
+      config.minTokenToBuy
+    );
+
+    spinner.text = chalk.yellow("⏳ Waiting for deployment confirmation...");
+    await presale.waitForDeployment();
+
+    const presaleAddress = await presale.getAddress();
+
+    spinner.succeed(chalk.greenBright("✅ Deployment successful!"));
+    console.log(chalk.bold(`\n🎯 Contract deployed at:`), chalk.greenBright(presaleAddress));
+    console.log(chalk.magentaBright(`\n🔗 Network:`), chalk.cyanBright(net), "\n");
+  } catch (error) {
+    spinner.fail(chalk.redBright("❌ Deployment failed!"));
+    console.error(chalk.red(error.message || error));
+    process.exit(1);
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main();
