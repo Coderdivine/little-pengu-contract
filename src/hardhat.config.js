@@ -53,7 +53,7 @@ module.exports = {
       allowUnlimitedContractSize: true
     },
     bsc: {
-      url: "https://bsc-dataseed.binance.org/",
+      url:"https://bsc-rpc.publicnode.com", // url: "https://bsc-dataseed.binance.org/",
       accounts: [process.env.PRIVATE_KEY],
       confirmations: 1,
       gasPrice: "auto",
@@ -62,12 +62,20 @@ module.exports = {
       chainId: 56
     },
     ethereum: {
-      url: "https://rpc.ankr.com/eth",
+      url: "https://ethereum-rpc.publicnode.com", // "https://rpc.ankr.com/eth",
       chainId: 1,
       accounts: [process.env.PRIVATE_KEY],
       gas: "auto",
       gasPrice: "auto",
       confirmations: 1
+    },
+    base: {
+      url: "https://mainnet.base.org",
+      chainId: 8453,
+      accounts: [process.env.PRIVATE_KEY],
+      gas: "auto",
+      gasPrice: "auto",
+      confirmations: 1,
     },
 
     // Testnet

@@ -304,14 +304,13 @@ interface Aggregator {
         );
 }
 
-contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
+contract LILPENGU_Presale_Source_Decimals is ReentrancyGuard, Ownable {
     uint256 public overalllRaised;
     uint256 public presaleId;
     uint256 public USDT_MULTIPLIER;
     uint256 public ETH_MULTIPLIER;
     address public fundReceiver;
     uint256 public uniqueBuyers;
-    address[] private participantsList;
 
     struct PresaleData {
         uint256 startTime;
@@ -355,7 +354,6 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
     mapping(address => bool) public isExcludeMinToken;
     mapping(address => bool) public isBlackList;
     mapping(address => bool) public isExist;
-    mapping(address => bool) private isInList;
 
     uint256 public MinTokenTobuy;
     uint256 public currentSale;
@@ -413,7 +411,7 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
         USDTInterface = IERC20Metadata(_usdt);
         USDCInterface = IERC20Metadata(_usdc);
         ETH_MULTIPLIER = (10 ** 18);
-        USDT_MULTIPLIER = (10 ** 6);
+        USDT_MULTIPLIER = (10 ** 18);
         fundReceiver = msg.sender;
     }
 
@@ -596,11 +594,6 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
         if (!isExist[msg.sender]) {
             isExist[msg.sender] = true;
             uniqueBuyers++;
-
-            if (!isInList[msg.sender]) {
-                participantsList.push(msg.sender);
-                isInList[msg.sender] = true;
-            }
         }
         uint256 tokens = usdtToTokens(currentSale, usdAmount);
         presale[currentSale].Sold += tokens;
@@ -832,8 +825,7 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
         uint256 _id,
         uint256 amount
     ) public view returns (uint256 _tokens) {
-        uint256 usdAmount = (amount * getLatestPrice() * USDT_MULTIPLIER) /
-            (ETH_MULTIPLIER * ETH_MULTIPLIER);
+        uint256 usdAmount = (amount * getLatestPrice()) / ETH_MULTIPLIER;
         _tokens = usdtToTokens(_id, usdAmount);
     }
 
@@ -968,72 +960,5 @@ contract LILPENGU_Presale_Source is ReentrancyGuard, Ownable {
 
     function blockTimeStamp() public view returns (uint256) {
         return block.timestamp;
-    }
-
-    struct ExportUserData {
-        address user;
-        uint256 totalInvestedAmount;
-        uint256 totalClaimableAmount;
-    }
-
-    function getExportData(
-        address[] memory _users
-    ) external view onlyOwner returns (ExportUserData[] memory) {
-        ExportUserData[] memory exportData = new ExportUserData[](
-            _users.length
-        );
-
-        for (uint256 i = 0; i < _users.length; i++) {
-            address user = _users[i];
-            uint256 totalInvested = 0;
-            uint256 totalClaimable = 0;
-
-            // Sum across all presale stages
-            for (uint256 j = 1; j <= presaleId; j++) {
-                totalInvested += userClaimData[user][j].investedAmount;
-                totalClaimable += userClaimData[user][j].claimAbleAmount;
-            }
-
-            exportData[i] = ExportUserData({
-                user: user,
-                totalInvestedAmount: totalInvested,
-                totalClaimableAmount: totalClaimable
-            });
-        }
-
-        return exportData;
-    }
-
-    function getAllParticipants()
-        external
-        view
-        onlyOwner
-        returns (address[] memory)
-    {
-        return participantsList;
-    }
-
-    function getUserSummary(
-        address _user
-    )
-        external
-        view
-        returns (
-            uint256 totalInvested,
-            uint256 totalClaimable,
-            uint256 stagesParticipated
-        )
-    {
-        uint256 stages = 0;
-
-        for (uint256 i = 1; i <= presaleId; i++) {
-            if (userClaimData[_user][i].claimAbleAmount > 0) {
-                totalInvested += userClaimData[_user][i].investedAmount;
-                totalClaimable += userClaimData[_user][i].claimAbleAmount;
-                stages++;
-            }
-        }
-
-        return (totalInvested, totalClaimable, stages);
     }
 }

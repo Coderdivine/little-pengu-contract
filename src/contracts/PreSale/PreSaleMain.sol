@@ -312,6 +312,7 @@ contract  LILPENGU_Presale_Main is ReentrancyGuard, Ownable {
     uint256 public ETH_MULTIPLIER;
     address public fundReceiver;
     uint256 public uniqueBuyers;
+    uint256 public blockchainCount;
 
     struct PresaleData {
         uint256 startTime;
@@ -344,6 +345,26 @@ contract  LILPENGU_Presale_Main is ReentrancyGuard, Ownable {
         uint256 activePercentAmount;
     }
 
+
+    struct BlockchainConfig {
+        string name;
+        bool isEnabled;
+        bool isRegistered;
+        uint256 vestingId;
+        uint256 totalUsersImported;
+        uint256 totalAmountImported;
+    }
+
+    struct CrossChainUserData {
+        uint256 totalInvestedAmount;
+        uint256 totalClaimableAmount;
+        uint256 claimedVestingAmount;
+        uint256 claimedAmount;
+        uint256 claimCount;
+        uint256 activePercentAmount;
+        bool isImported;
+    }
+
     IERC20Metadata public USDTInterface;
     IERC20Metadata public USDCInterface;
     Aggregator internal aggregatorInterface;
@@ -357,10 +378,33 @@ contract  LILPENGU_Presale_Main is ReentrancyGuard, Ownable {
     mapping(address => bool) public isExist;
     mapping(address => bytes32) public solanaBindings;
 
+    mapping(string => BlockchainConfig) public blockchainRegistry;
+    mapping(string => uint256) public blockchainIdByName;
+    string[] public registeredBlockchains;
+    mapping(address => mapping(string => CrossChainUserData)) public crossChainUserData;
+
+
 
     uint256 public MinTokenTobuy;
     uint256 public currentSale;
     address public SaleToken;
+
+    event BlockchainRegistered(string indexed name, uint256 vestingId, uint256 timestamp);
+    event BlockchainUpdated(string indexed name, bool isEnabled, uint256 timestamp);
+    event CrossChainDataImported(
+        address indexed user,
+        string indexed blockchain,
+        uint256 investedAmount,
+        uint256 claimableAmount,
+        uint256 timestamp
+    );
+    event CrossChainTokensClaimed(
+        address indexed user,
+        string indexed blockchain,
+        uint256 amount,
+        uint256 timestamp
+    );
+
 
     event PresaleCreated(
         uint256 indexed _id,
@@ -414,7 +458,7 @@ contract  LILPENGU_Presale_Main is ReentrancyGuard, Ownable {
         USDTInterface = IERC20Metadata(_usdt);
         USDCInterface = IERC20Metadata(_usdc);
         ETH_MULTIPLIER = (10**18);
-        USDT_MULTIPLIER = (10**6);
+        USDT_MULTIPLIER = (10**18);
         fundReceiver = msg.sender;
     }
 
@@ -982,6 +1026,357 @@ contract  LILPENGU_Presale_Main is ReentrancyGuard, Ownable {
     
     function isSolanaBound(address ethAddress) public view returns (bool) {
         return solanaBindings[ethAddress] != bytes32(0);
+    }
+
+    function registerBlockchain(
+        string memory _name,
+        uint256 _vestingId,
+        bool _isEnabled
+    ) external onlyOwner {
+        require(bytes(_name).length > 0, "Empty blockchain name");
+        require(!blockchainRegistry[_name].isRegistered, "Blockchain already registered");
+        require(vesting[_vestingId].vestingStartTime > 0, "Invalid vesting ID");
+
+        blockchainCount++;
+        blockchainIdByName[_name] = blockchainCount;
+
+        blockchainRegistry[_name] = BlockchainConfig({
+            name: _name,
+            isEnabled: _isEnabled,
+            isRegistered: true,
+            vestingId: _vestingId,
+            totalUsersImported: 0,
+            totalAmountImported: 0
+        });
+
+        registeredBlockchains.push(_name);
+
+        emit BlockchainRegistered(_name, _vestingId, block.timestamp);
+    }
+
+    function updateBlockchainConfig(
+        string memory _name,
+        bool _isEnabled,
+        uint256 _vestingId
+    ) external onlyOwner {
+        require(blockchainRegistry[_name].isRegistered, "Blockchain not registered");
+        require(vesting[_vestingId].vestingStartTime > 0, "Invalid vesting ID");
+
+        blockchainRegistry[_name].isEnabled = _isEnabled;
+        blockchainRegistry[_name].vestingId = _vestingId;
+
+        emit BlockchainUpdated(_name, _isEnabled, block.timestamp);
+    }
+
+    function enableBlockchain(string memory _name, bool _status) external onlyOwner {
+        require(blockchainRegistry[_name].isRegistered, "Blockchain not registered");
+        blockchainRegistry[_name].isEnabled = _status;
+        emit BlockchainUpdated(_name, _status, block.timestamp);
+    }
+
+
+function importCrossChainData(
+        string memory _blockchain,
+        address[] memory _users,
+        uint256[] memory _investedAmounts,
+        uint256[] memory _claimableAmounts
+    ) external onlyOwner {
+        require(blockchainRegistry[_blockchain].isRegistered, "Blockchain not registered");
+        require(_users.length == _investedAmounts.length, "Length mismatch");
+        require(_users.length == _claimableAmounts.length, "Length mismatch");
+
+        BlockchainConfig storage config = blockchainRegistry[_blockchain];
+
+        for (uint256 i = 0; i < _users.length; i++) {
+            address user = _users[i];
+            require(user != address(0), "Invalid user address");
+
+            CrossChainUserData storage userData = crossChainUserData[user][_blockchain];
+            
+            if (userData.isImported) {
+                continue;
+            }
+
+            userData.totalInvestedAmount = _investedAmounts[i];
+            userData.totalClaimableAmount = _claimableAmounts[i];
+            userData.isImported = true;
+
+            config.totalUsersImported++;
+            config.totalAmountImported += _claimableAmounts[i];
+            
+            if (!isExist[user]) {
+                isExist[user] = true;
+                uniqueBuyers++;
+            }
+
+            emit CrossChainDataImported(
+                user,
+                _blockchain,
+                _investedAmounts[i],
+                _claimableAmounts[i],
+                block.timestamp
+            );
+        }
+    }
+
+    function batchImportSingleUser(
+        string memory _blockchain,
+        address _user,
+        uint256 _investedAmount,
+        uint256 _claimableAmount
+    ) external onlyOwner {
+        require(blockchainRegistry[_blockchain].isRegistered, "Blockchain not registered");
+        require(_user != address(0), "Invalid user address");
+
+        BlockchainConfig storage config = blockchainRegistry[_blockchain];
+        CrossChainUserData storage userData = crossChainUserData[_user][_blockchain];
+
+        if (!userData.isImported) {
+            config.totalUsersImported++;
+            if (!isExist[_user]) {
+                isExist[_user] = true;
+                uniqueBuyers++;
+            }
+        }
+
+        userData.totalInvestedAmount += _investedAmount;
+        userData.totalClaimableAmount += _claimableAmount;
+        userData.isImported = true;
+
+        config.totalAmountImported += _claimableAmount;
+
+        emit CrossChainDataImported(
+            _user,
+            _blockchain,
+            _investedAmount,
+            _claimableAmount,
+            block.timestamp
+        );
+    }
+
+
+    function claimCrossChain(string memory _blockchain) external nonReentrant returns (bool) {
+        require(blockchainRegistry[_blockchain].isRegistered, "Blockchain not registered");
+        require(blockchainRegistry[_blockchain].isEnabled, "Blockchain not enabled");
+        require(!isBlackList[msg.sender], "Account is blacklisted");
+        require(SaleToken != address(0), "Sale token not set");
+
+        CrossChainUserData storage userData = crossChainUserData[msg.sender][_blockchain];
+        require(userData.isImported, "No data imported for user");
+        require(userData.totalClaimableAmount > 0, "Nothing to claim");
+
+        uint256 vestingId = blockchainRegistry[_blockchain].vestingId;
+        VestingData memory vestingInfo = vesting[vestingId];
+
+        require(block.timestamp >= vestingInfo.vestingStartTime, "Vesting not started");
+
+        uint256 transferAmount;
+        uint256 remainingAmount = userData.totalClaimableAmount - userData.claimedAmount;
+        require(remainingAmount > 0, "All tokens claimed");
+
+        if (userData.claimCount == 0) {
+            // Initial claim
+            transferAmount = (userData.totalClaimableAmount * vestingInfo.initialClaimPercent) / 1000;
+            userData.activePercentAmount = (userData.totalClaimableAmount * vestingInfo.vestingPercentage) / 1000;
+        } else {
+            // Vesting claims
+            uint256 duration = block.timestamp - vestingInfo.vestingStartTime;
+            uint256 multiplier = duration / vestingInfo.vestingTime;
+            
+            if (multiplier > vestingInfo.totalClaimCycles) {
+                multiplier = vestingInfo.totalClaimCycles;
+            }
+
+            uint256 totalVestedAmount = multiplier * userData.activePercentAmount;
+            transferAmount = totalVestedAmount - userData.claimedVestingAmount;
+
+            // Handle remaining dust amount after all cycles
+            if (multiplier >= vestingInfo.totalClaimCycles && remainingAmount > 0 && transferAmount == 0) {
+                transferAmount = remainingAmount;
+            }
+
+            require(transferAmount > 0, "No tokens available yet");
+        }
+
+        require(
+            transferAmount <= IERC20(SaleToken).balanceOf(address(this)),
+            "Insufficient contract balance"
+        );
+
+        bool success = IERC20(SaleToken).transfer(msg.sender, transferAmount);
+        require(success, "Token transfer failed");
+
+        userData.claimedAmount += transferAmount;
+        if (userData.claimCount > 0) {
+            userData.claimedVestingAmount += transferAmount;
+        }
+        userData.claimCount++;
+
+        emit CrossChainTokensClaimed(msg.sender, _blockchain, transferAmount, block.timestamp);
+
+        return true;
+    }
+
+    function claimAllCrossChain() external nonReentrant {
+        for (uint256 i = 0; i < registeredBlockchains.length; i++) {
+            string memory blockchain = registeredBlockchains[i];
+            
+            if (!blockchainRegistry[blockchain].isEnabled) continue;
+            
+            CrossChainUserData storage userData = crossChainUserData[msg.sender][blockchain];
+            if (!userData.isImported) continue;
+            if (userData.totalClaimableAmount == 0) continue;
+            if (userData.claimedAmount >= userData.totalClaimableAmount) continue;
+
+            uint256 vestingId = blockchainRegistry[blockchain].vestingId;
+            if (block.timestamp < vesting[vestingId].vestingStartTime) continue;
+
+            try this.claimCrossChainInternal(blockchain, msg.sender) {
+                // Success
+            } catch {
+                // Skip if claim fails
+                continue;
+            }
+        }
+    }
+
+    function claimCrossChainInternal(string memory _blockchain, address _user) external {
+        require(msg.sender == address(this), "Internal only");
+        
+        CrossChainUserData storage userData = crossChainUserData[_user][_blockchain];
+        uint256 vestingId = blockchainRegistry[_blockchain].vestingId;
+        VestingData memory vestingInfo = vesting[vestingId];
+
+        uint256 transferAmount;
+        uint256 remainingAmount = userData.totalClaimableAmount - userData.claimedAmount;
+
+        if (userData.claimCount == 0) {
+            transferAmount = (userData.totalClaimableAmount * vestingInfo.initialClaimPercent) / 1000;
+            userData.activePercentAmount = (userData.totalClaimableAmount * vestingInfo.vestingPercentage) / 1000;
+        } else {
+            uint256 duration = block.timestamp - vestingInfo.vestingStartTime;
+            uint256 multiplier = duration / vestingInfo.vestingTime;
+            
+            if (multiplier > vestingInfo.totalClaimCycles) {
+                multiplier = vestingInfo.totalClaimCycles;
+            }
+
+            uint256 totalVestedAmount = multiplier * userData.activePercentAmount;
+            transferAmount = totalVestedAmount - userData.claimedVestingAmount;
+
+            if (multiplier >= vestingInfo.totalClaimCycles && remainingAmount > 0 && transferAmount == 0) {
+                transferAmount = remainingAmount;
+            }
+
+            require(transferAmount > 0, "No tokens available yet");
+        }
+
+        bool success = IERC20(SaleToken).transfer(_user, transferAmount);
+        require(success, "Token transfer failed");
+
+        userData.claimedAmount += transferAmount;
+        if (userData.claimCount > 0) {
+            userData.claimedVestingAmount += transferAmount;
+        }
+        userData.claimCount++;
+
+        emit CrossChainTokensClaimed(_user, _blockchain, transferAmount, block.timestamp);
+    }
+
+
+
+    function getCrossChainClaimableAmount(address _user, string memory _blockchain) 
+        public 
+        view 
+        returns (uint256) 
+    {
+        require(blockchainRegistry[_blockchain].isRegistered, "Blockchain not registered");
+        
+        CrossChainUserData memory userData = crossChainUserData[_user][_blockchain];
+        if (!userData.isImported || userData.totalClaimableAmount == 0) {
+            return 0;
+        }
+
+        uint256 vestingId = blockchainRegistry[_blockchain].vestingId;
+        VestingData memory vestingInfo = vesting[vestingId];
+
+        if (block.timestamp < vestingInfo.vestingStartTime) {
+            return 0;
+        }
+
+        uint256 remainingAmount = userData.totalClaimableAmount - userData.claimedAmount;
+        if (remainingAmount == 0) {
+            return 0;
+        }
+
+        if (userData.claimCount == 0) {
+            return (userData.totalClaimableAmount * vestingInfo.initialClaimPercent) / 1000;
+        }
+
+        uint256 duration = block.timestamp - vestingInfo.vestingStartTime;
+        uint256 multiplier = duration / vestingInfo.vestingTime;
+        
+        if (multiplier > vestingInfo.totalClaimCycles) {
+            multiplier = vestingInfo.totalClaimCycles;
+        }
+
+        uint256 activeAmount = (userData.totalClaimableAmount * vestingInfo.vestingPercentage) / 1000;
+        uint256 totalVestedAmount = multiplier * activeAmount;
+        uint256 claimable = totalVestedAmount - userData.claimedVestingAmount;
+
+        if (multiplier >= vestingInfo.totalClaimCycles && remainingAmount > claimable) {
+            return remainingAmount;
+        }
+
+        return claimable;
+    }
+
+    function getUserCrossChainData(address _user, string memory _blockchain)
+        external
+        view
+        returns (
+            uint256 totalInvested,
+            uint256 totalClaimable,
+            uint256 claimed,
+            uint256 remaining,
+            uint256 claimCount,
+            bool isImported
+        )
+    {
+        CrossChainUserData memory userData = crossChainUserData[_user][_blockchain];
+        return (
+            userData.totalInvestedAmount,
+            userData.totalClaimableAmount,
+            userData.claimedAmount,
+            userData.totalClaimableAmount - userData.claimedAmount,
+            userData.claimCount,
+            userData.isImported
+        );
+    }
+
+    function getBlockchainInfo(string memory _blockchain)
+        external
+        view
+        returns (
+            bool isRegistered,
+            bool isEnabled,
+            uint256 vestingId,
+            uint256 totalUsers,
+            uint256 totalAmount
+        )
+    {
+        BlockchainConfig memory config = blockchainRegistry[_blockchain];
+        return (
+            config.isRegistered,
+            config.isEnabled,
+            config.vestingId,
+            config.totalUsersImported,
+            config.totalAmountImported
+        );
+    }
+
+    function getAllRegisteredBlockchains() external view returns (string[] memory) {
+        return registeredBlockchains;
     }
     
 }

@@ -3,7 +3,7 @@ const { ethers, network } = hre;
 const chalk = require("chalk");
 const ora = require("ora");
 const { CONFIG } = require("../configs");
-
+const CONTRACT_NAME = "LILPENGU_Presale_Main";
 
 async function main() {
   const net = network.name;
@@ -18,10 +18,10 @@ async function main() {
   console.log(chalk.cyan(`\n🔧 Using configuration:`));
   console.table(config);
 
-  const spinner = ora(chalk.green(`Deploying LILPENGU Presale Main`)).start();
+  const spinner = ora(chalk.green(`Deploying LILPENGU Presale Source...`)).start();
 
   try {
-    const Presale = await ethers.getContractFactory("LILPENGU_Presale_Testnet_Main");
+    const Presale = await ethers.getContractFactory(CONTRACT_NAME);
     const presale = await Presale.deploy(
       config.oracle,
       config.usdt,
@@ -46,3 +46,11 @@ async function main() {
 }
 
 main();
+
+// module.exports = [
+//   "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+//   "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+//   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+//   "0xB5F20B4AEbeA14424E0b5A031745ED4DD3eE4f9e",
+//   1
+// ];

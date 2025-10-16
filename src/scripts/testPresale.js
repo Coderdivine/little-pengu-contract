@@ -5,14 +5,15 @@ const chalk = require("chalk");
 const ora = require("ora");
 
 async function main() {
-  console.clear();
+  // console.clear();
   console.log(chalk.cyan.bold("🚀 LILPEPE Presale Tester (Hardhat CLI)\n"));
 
   // Spinner start
   const spinner = ora("Connecting to deployed presale contract...").start();
 
   try {
-    const presaleAddress = "0xC2014403Bb17BFFba9C6af561CfaA3F3957e69D3";
+    // const presaleAddress = "0x5584197Ce066aAbc11919aCe52B6DF5948b1e930"; // Little Pepe Mainnet Presale
+    const presaleAddress = "0xa18BBF0e8e1242fF23d1033756bABF3d82dAB00E"; // Little Pengu Mainnet Presale
     const Presale = await ethers.getContractFactory("LILPENGU_Presale_Testnet_Source");
     const presale = Presale.attach(presaleAddress);
 
@@ -25,6 +26,10 @@ async function main() {
     const presaleId = await presale.presaleId();
     spinner.succeed(chalk.green("Presale ID: ") + chalk.white(presaleId.toString()));
 
+
+    const usdtMultiplier = await presale.USDT_MULTIPLIER();
+    spinner.succeed(chalk.green("USDT Multiplier: ") + chalk.white(usdtMultiplier.toString()));
+
     // Minimum buy
     spinner.start("Fetching Minimum tokens to buy...");
     const minBuy = await presale.MinTokenTobuy();
@@ -34,6 +39,19 @@ async function main() {
     spinner.start("Fetching Current Sale ID...");
     const currentSale = await presale.currentSale();
     spinner.succeed(chalk.green("Current Sale ID: ") + chalk.white(currentSale.toString()));
+
+    const presaleDetials = await presale.presale(1);
+    console.log(chalk.cyan.bold("\n📋 Current Sale Details:"))
+    console.table({
+      TokenPriceUSD: presaleDetials.price,
+      TokensForSale: presaleDetials.tokensToSell,
+      TokensSold: presaleDetials.Sold,
+      amountRaised: presaleDetials.amountRaised,
+      UsdtHardcap: presaleDetials.UsdtHardcap,
+      IsActive: presaleDetials.Active,
+      nextStagePrice: presaleDetials.nextStagePrice
+    });
+    
 
     // Fund receiver
     spinner.start("Fetching Fund Receiver address...");
