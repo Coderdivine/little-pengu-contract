@@ -2,7 +2,6 @@ require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomicfoundation/hardhat-verify");
 
-
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
@@ -12,22 +11,22 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 1000,
           },
           evmVersion: "paris",
-          viaIR: true
-        }
+          viaIR: true,
+        },
       },
       {
         version: "0.8.21",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1000
+            runs: 1000,
           },
           evmVersion: "paris",
-          viaIR: true
-        }
+          viaIR: true,
+        },
       },
     ],
   },
@@ -41,7 +40,7 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
     },
     assetchain: {
       url: "https://mainnet-rpc.assetchain.org",
@@ -50,16 +49,16 @@ module.exports = {
       confirmations: 1,
       gasPrice: "auto",
       gas: "auto",
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
     },
     bsc: {
-      url:"https://bsc-rpc.publicnode.com", // url: "https://bsc-dataseed.binance.org/",
+      url: "https://bsc-rpc.publicnode.com", // url: "https://bsc-dataseed.binance.org/",
       accounts: [process.env.PRIVATE_KEY],
       confirmations: 1,
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
-      chainId: 56
+      chainId: 56,
     },
     ethereum: {
       url: "https://ethereum-rpc.publicnode.com", // "https://rpc.ankr.com/eth",
@@ -67,7 +66,7 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY],
       gas: "auto",
       gasPrice: "auto",
-      confirmations: 1
+      confirmations: 1,
     },
     base: {
       url: "https://mainnet.base.org",
@@ -85,7 +84,7 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY],
       gas: "auto",
       gasPrice: "auto",
-      allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true,
     },
     baseSepolia: {
       url: "https://sepolia.base.org",
@@ -110,17 +109,20 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: process.env.BSCSCAN_API_KEY,
+    // apiKey: process.env.BSCSCAN_API_KEY,
+    apiKey: {
+      assetchain: "abc",
+    },
     customChains: [
       {
         network: "assetchain",
         chainId: 42420,
         urls: {
           apiURL: "https://scan.assetchain.org/api",
-          browserURL: "https://scan.assetchain.org/"
-        }
-      }
-    ]
+          browserURL: "https://scan.assetchain.org/",
+        },
+      },
+    ],
   },
   gasReporter: {
     enabled: true,
@@ -132,7 +134,6 @@ module.exports = {
     disambiguatePaths: false,
   },
   sourcify: {
-  enabled: true
-}
-
+    enabled: true,
+  },
 };

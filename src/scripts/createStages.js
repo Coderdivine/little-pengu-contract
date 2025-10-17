@@ -3,7 +3,7 @@ const chalk = require("chalk");
 const ora = require("ora");
 
 async function main() {
-  console.log(chalk.blueBright.bold("\n🎯 Creating 20 Presale Stages\n"));
+  console.log(chalk.blueBright.bold("\n🎯 Creating 19 Presale Stages\n"));
 
   const [owner] = await ethers.getSigners();
   const net = network.name;
@@ -11,7 +11,7 @@ async function main() {
   console.log(chalk.cyan(`Network: ${net}`));
   console.log(chalk.cyan(`Owner: ${owner.address}\n`));
 
-  const CONTRACT_ADDRESS = "0x8983C5f46D5B91095B343551e7f3568E8680361b";
+  const CONTRACT_ADDRESS = "0x3AaA141D0Eb320D737A7AF3847Cc383fFd6ECef7";
 
   const Contract = await ethers.getContractFactory("LILPENGU_Presale_Source");
   const presale = Contract.attach(CONTRACT_ADDRESS);
@@ -42,7 +42,7 @@ async function main() {
     { tokens: "1500000000", pricePerUSDT: "384.62", hardcap: "3900000", nextPrice: "370.37" },
     { tokens: "1500000000", pricePerUSDT: "370.37", hardcap: "4050000", nextPrice: "357.14" },
     { tokens: "1500000000", pricePerUSDT: "357.14", hardcap: "4200000", nextPrice: "344.83" },
-    { tokens: "1500000000", pricePerUSDT: "344.83", hardcap: "4350000", nextPrice: "344.83" }
+    // { tokens: "1500000000", pricePerUSDT: "344.83", hardcap: "4350000", nextPrice: "344.83" }
   ];
 
   console.log(chalk.yellow("Creating presale stages...\n"));

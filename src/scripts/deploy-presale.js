@@ -45,12 +45,15 @@ async function main() {
   }
 }
 
-main();
+// main();
 
-// module.exports = [
-//   "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-//   "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-//   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-//   "0xB5F20B4AEbeA14424E0b5A031745ED4DD3eE4f9e",
-//   1
-// ];
+const net = network.name;
+const config = CONFIG[net];
+
+module.exports = [
+  config.oracle,
+  config.usdt,
+  config.usdc,
+  config.saleToken,
+  config.minTokenToBuy
+];
